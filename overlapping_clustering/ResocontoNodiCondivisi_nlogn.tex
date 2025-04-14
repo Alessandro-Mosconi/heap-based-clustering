@@ -1,0 +1,119 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\begin{document}
+
+\title{Report sull'Algoritmo di Clustering Bilanciato con Nodi Condivisi}
+\author{}
+\date{}
+\maketitle
+
+\section*{1. Introduzione}
+Questo algoritmo suddivide \( n \) nodi in \( k \) cluster rispettando i seguenti vincoli:
+\begin{itemize}
+    \item Ogni cluster deve contenere almeno \( \texttt{min\_shared\_nodes} \) nodi condivisi con altri cluster.
+    \item Ogni cluster deve contenere almeno \( \texttt{min\_exclusive\_nodes} \) nodi esclusivi.
+    \item Tutti i nodi devono essere assegnati a uno o più cluster.
+\end{itemize}
+
+Una caratteristica fondamentale dell'algoritmo è la capacità di gestire situazioni in cui un cluster non soddisfa il numero minimo di nodi condivisi (\( \texttt{min\_shared\_nodes} \)). In tali casi, l'algoritmo forza l'aggiunta di nodi condivisi al cluster interessato considerando i nodi non condivisi degli altri cluster, minimizzando la distanza dal centroide del cluster corrente. Inoltre, durante questo processo, viene garantito che ogni cluster mantenga almeno \( \texttt{min\_exclusive\_nodes} \) nodi esclusivi.
+
+\section*{2. Fasi dell'Algoritmo}
+
+\subsection*{2.1 Selezione dei centroidi iniziali}
+\textbf{Scopo:} Selezionare \( k \) centroidi iniziali che siano il più lontani possibile tra loro.\\
+\textbf{Algoritmo:}
+\begin{enumerate}
+    \item Il primo centroide è scelto arbitrariamente.
+    \item Iterativamente, si seleziona il nodo più distante dai centroidi già scelti:
+    \[
+    \texttt{next\_centroid} = \arg\max_i (\texttt{cached\_dists}[i]),
+    \]
+    dove \texttt{cached\_dists} mantiene le distanze minime dai centroidi già scelti.
+\end{enumerate}
+\textbf{Complessità:} \( O(k \cdot n) \).
+
+\subsection*{2.2 Popolamento bilanciato dei cluster}
+\textbf{Scopo:} Assegnare i nodi ai cluster in modo bilanciato, mantenendo una dimensione uniforme per ciascun cluster.\\
+\textbf{Metodo:} L'algoritmo utilizza una strategia basata su heap per popolare i cluster in modo bilanciato. Ecco i passi principali:
+
+\begin{enumerate}
+    \item \textbf{Inizializzazione degli heap:}
+    \begin{itemize}
+        \item Viene costruito un \texttt{heap} (una coda con priorità) per ogni cluster.
+        \item Ogni heap contiene i nodi non assegnati, ordinati in base alla distanza dal centroide del cluster corrispondente.
+        \item La priorità nell'heap è determinata dalla distanza: il nodo con la distanza minima dal centroide è il primo ad essere estratto.
+    \end{itemize}
+
+    \item \textbf{Assegnazione dei nodi ai cluster:}
+    \begin{itemize}
+        \item Per ogni cluster, viene estratto il nodo con la distanza minima dall'heap del cluster.
+        \item Il nodo viene aggiunto al cluster se non è già stato assegnato ad altri cluster.
+        \item Una volta assegnato un nodo a un cluster, questo nodo viene rimosso dagli heap degli altri cluster per garantire che non venga assegnato più volte.
+    \end{itemize}
+
+    \item \textbf{Controllo delle dimensioni del cluster:}
+    \begin{itemize}
+        \item Il processo di assegnazione continua iterativamente finché ogni cluster raggiunge la dimensione desiderata (\texttt{cluster\_size}).
+        \item Se un heap non ha più nodi da estrarre, il processo passa al cluster successivo.
+    \end{itemize}
+\end{enumerate}
+
+\textbf{Complessità:} \( O(k \cdot n \log n) \).
+
+\subsection*{2.3 Ricerca nodi condivisi}
+\textbf{Scopo:} Garantire che ogni cluster abbia almeno \( \texttt{min\_shared\_nodes} \) nodi condivisi mantenendo il vincolo sui nodi esclusivi.\\
+\textbf{Metodo:}
+\begin{enumerate}
+    \item Si costruisce un \texttt{heap} per ogni cluster, contenente i nodi non condivisi di altri cluster, ordinati in base alla distanza dal centroide del cluster corrente.
+    \item Per ogni nodo candidato, si verifica che il cluster di origine abbia un numero sufficiente di nodi esclusivi (\( > \texttt{min\_exclusive\_nodes} \)).
+    \item Si seleziona iterativamente il nodo più vicino dal \texttt{heap} e lo si aggiunge come nodo condiviso tra il cluster corrente e il cluster di origine del nodo.
+    \item Questo processo continua finché ogni cluster soddisfa il vincolo di \( \texttt{min\_shared\_nodes} \).
+\end{enumerate}
+
+\textbf{Modifica introdotta:} Durante l'assegnazione dei nodi condivisi, il controllo aggiuntivo garantisce che i cluster di origine mantengano sempre almeno \( \texttt{min\_exclusive\_nodes} \) nodi esclusivi. Se un cluster ha un numero di nodi esclusivi \( \leq \texttt{min\_exclusive\_nodes} \), i suoi nodi non possono essere selezionati come condivisi.
+
+\textbf{Complessità:} \( O(k \cdot n \log n) \).
+
+\subsection*{2.4 Calcolo dei nodi esclusivi}
+\textbf{Scopo:} Identificare i nodi esclusivi di ciascun cluster.\\
+\textbf{Metodo:} Per ogni nodo in un cluster, si verifica se non è presente nell'elenco dei nodi condivisi.\\
+\textbf{Complessità:} \( O(n) \).
+
+\subsection*{2.5 Visualizzazione avanzata dei cluster}
+\textbf{Scopo:} Visualizzare i cluster con un'ulteriore evidenza grafica dei nodi condivisi.\\
+\textbf{Metodo:}
+\begin{itemize}
+    \item Ogni nodo condiviso è rappresentato con due colori, ognuno corrispondente a uno dei due cluster più vicini.
+    \item Viene utilizzata la libreria \texttt{matplotlib} e la funzione \texttt{Wedge} per creare un effetto visivo a doppio colore.
+\end{itemize}
+
+---
+
+\section*{3. Complessità Complessiva}
+La complessità totale dell'algoritmo aggiornato (senza considerare la generazione della matrice delle distanze) è:
+\[
+O(k \cdot n \log n) \; (\text{popolamento dei cluster}) + O(k \cdot n \log n) \; (\text{forzatura dei nodi condivisi}).
+\]
+Pertanto, la complessità complessiva è:
+\[
+O(k \cdot n \log n).
+\]
+
+---
+
+\section*{4. Conclusioni}
+L'algoritmo di clustering bilanciato aggiornato:
+\begin{itemize}
+    \item Suddivide i nodi in cluster bilanciati rispettando i vincoli di nodi condivisi ed esclusivi.
+    \item Durante la ricerca dei nodi condivisi, utilizza un approccio basato sulla minimizzazione delle distanze, selezionando i nodi più vicini al centroide del cluster corrente tramite heap.
+    \item Garantisce che ogni cluster mantenga almeno \( \texttt{min\_exclusive\_nodes} \) nodi esclusivi anche dopo l'assegnazione dei nodi condivisi.
+    \item Utilizza strutture dati efficienti (heap) e un processo iterativo ottimizzato per mantenere le prestazioni scalabili.
+    \item Fornisce un output visivo avanzato con evidenza grafica dei nodi condivisi, permettendo una migliore interpretazione dei risultati.
+\end{itemize}
+
+\end{document}
+
