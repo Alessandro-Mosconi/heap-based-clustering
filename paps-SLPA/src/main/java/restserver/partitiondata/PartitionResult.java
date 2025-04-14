@@ -6,10 +6,10 @@ import java.util.List;
 
 public class PartitionResult {
     private final List<Community> communities;
-    private final long computationTime;
+    private final long computation_time;
 
-    public PartitionResult(List<Community> communities, long computationTime) {
+    public PartitionResult(List<Community> communities, long computation_time) {
         this.communities = communities;
-        this.computationTime = computationTime;
+        this.computation_time = computation_time;
     }
 }

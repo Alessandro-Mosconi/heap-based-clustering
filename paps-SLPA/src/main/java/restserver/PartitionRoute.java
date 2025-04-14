@@ -4,15 +4,11 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import restserver.ordering.Utils;
-import restserver.partition.ClusterJsonExporter;
-import restserver.partition.Community;
-import restserver.partition.HeapClustering;
-import restserver.partition.SLPA;
+import restserver.partition.*;
 import restserver.partitiondata.*;
+import restserver.partitiondata.SimpleClusterOnly;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static spark.Spark.post;
 
@@ -78,6 +74,43 @@ public class PartitionRoute {
 
             return json;
         });
+        post("/communities/3", (request, response) -> {
+
+            logger.info("new POST request to /communities/3");
+
+            response.type("application/json");
+
+            PartitionDataResourceAware data = new Gson().fromJson(request.body(), PartitionDataResourceAware.class);
+            double[][] routeMatrix = convertFloatToDouble(data.getMatrix().getRoutes());
+            double[] resourceList = data.getResources().stream().mapToDouble(Double::doubleValue).toArray();
+            int maxNodesPerCluster = data.getMaxNodesPerCluster();
+
+            long start = System.currentTimeMillis();
+
+            ResourceAwareClustering.ClusteringOutput result = ResourceAwareClustering.balancedClusteringByNodesAndResources(
+                    routeMatrix,
+                    resourceList,
+                    maxNodesPerCluster,
+                    50,       // numero di iterazioni T
+                    1.1       // tolleranza
+            );
+
+            long elapsed = System.currentTimeMillis() - start;
+
+            List<SimpleClusterOnly> clusterData = new ArrayList<>();
+            for (ResourceAwareClustering.ClusterResult cluster : result.clusterData) {
+                clusterData.add(new SimpleClusterOnly(cluster.cluster));
+            }
+
+            PartitionResultClusterOnly responseObj = new PartitionResultClusterOnly(
+                    clusterData,
+                    result.centroids,
+                    elapsed
+            );
+
+            return new Gson().toJson(responseObj);
+        });
+
     }
     public static double[][] convertFloatToDouble(float[][] input) {
         double[][] result = new double[input.length][];
