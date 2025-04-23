@@ -25,18 +25,19 @@ public class PartitionRoute {
 
             PartitionData data = new Gson().fromJson(request.body(), PartitionData.class);
 
-            logger.info("Partition data:");
-            logger.info(data.toString());
             SLPA slpa = new SLPA(data);
 
             PartitionParameters parameters = data.getParameters();
 
             long time = System.currentTimeMillis();
+
+            logger.info("Starting SLPA");
             List<Community> communities = slpa.computeCommunities(parameters.getIterations(), parameters.getProbabilityThreshold());
 
             if (communities.size() > 1) communities = Utils.orderCommunities(communities);
 
             Long elapsedTime = System.currentTimeMillis() - time;
+            logger.info("Finished SLPA");
             return new Gson().toJson(new PartitionResult(communities, elapsedTime), PartitionResult.class);
         });
 
@@ -49,13 +50,12 @@ public class PartitionRoute {
 
             PartitionDataOverlappingCluster data = new Gson().fromJson(request.body(), PartitionDataOverlappingCluster.class);
 
-            logger.info("Partition data:");
-            logger.info(data.toString());
-
+            logger.info("Data received");
             PartitionParametersOverlappingCluster parameters = data.getParameters();
 
             long start = System.currentTimeMillis();
 
+            logger.info("Starting overlapping clustering");
             HeapClustering.BalancedClusteringResult result = HeapClustering.balancedClustering(
                     convertFloatToDouble(data.getMatrix().getRoutes()),
                     parameters.getMinNodesPerCluster(),
@@ -63,6 +63,7 @@ public class PartitionRoute {
                     parameters.getMinExclusiveNodes()
             );
 
+            logger.info("Starting overlapping clustering");
             long elapsed = System.currentTimeMillis() - start;
 
             String json = ClusterJsonExporter.generateClusterDataJson(
@@ -87,6 +88,7 @@ public class PartitionRoute {
 
             long start = System.currentTimeMillis();
 
+            logger.info("Starting resource clustering");
             ResourceAwareClustering.ClusteringOutput result = ResourceAwareClustering.balancedClusteringByNodesAndResources(
                     routeMatrix,
                     resourceList,
@@ -95,6 +97,7 @@ public class PartitionRoute {
                     1.1       // tolleranza
             );
 
+            logger.info("Finished resource clustering");
             long elapsed = System.currentTimeMillis() - start;
 
             List<SimpleClusterOnly> clusterData = new ArrayList<>();

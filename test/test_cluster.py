@@ -11,6 +11,7 @@ from caseconverter import snakecase
 from scipy.spatial import ConvexHull
 import matplotlib.pyplot as plt
 import pandas as pd
+import random
 
 
 ### --- GENERAZIONE E UTILITIES --- ###
@@ -20,6 +21,22 @@ def generate_nodes(rows, cols):
         node_number: (i, j)
         for node_number, (i, j) in enumerate(((i, j) for i in range(rows) for j in range(cols)), start=1)
     }
+
+def generate_random_nodes(rows, cols, seed=42):
+    random.seed(seed)
+    # Griglia espansa
+    extended_coords = [(i, j) for i in range(rows * 2) for j in range(cols * 2)]
+    # Mescolo le coordinate
+    random.shuffle(extended_coords)
+    # Prendo solo il numero desiderato di nodi
+    selected_coords = extended_coords[:rows * cols]
+    # Assegno gli ID da 1 in poi
+    return {
+        node_number: coord
+        for node_number, coord in enumerate(selected_coords, start=1)
+    }
+
+
 
 def create_distance_matrix(nodes):
     coords = np.array(list(nodes.values()))
@@ -63,34 +80,47 @@ def plot_communities(communities, nodes, title):
     plt.savefig(snakecase(title) + '.png', format="png", dpi=300)
     # plt.show()
 
+
 def plot_clusters_overlap(cluster_data, centroids, nodes, route_matrix, title):
     plt.figure(figsize=(10, 10))
-    colors = plt.cm.get_cmap('tab10', len(cluster_data))
     ax = plt.gca()
+    colors = plt.cm.get_cmap('tab20', len(cluster_data))  # più colori disponibili
+    scatter_size = 100
+    wedge_radius = 0.8  # scegli tu il valore ottimale in base alla densità
 
     for cluster_idx, data in enumerate(cluster_data):
+        # Nodi esclusivi (senza contorno nero)
         cluster_nodes = [nodes[node_id + 1] for node_id in data["cluster"]]
         x, y = zip(*cluster_nodes)
-        plt.scatter(x, y, c=[colors(cluster_idx)], label=f'Cluster {cluster_idx + 1}', s=100)
+        plt.scatter(x, y, c=[colors(cluster_idx)], label=f'Cluster {cluster_idx + 1}', s=scatter_size)
 
+        # Nodi condivisi (con doppio colore e contorno nero)
         for node_id in data["shared_nodes"]:
             distances = [route_matrix[node_id, centroid] for centroid in centroids]
             closest_clusters = np.argsort(distances)[:2]
             shared_coord = nodes[node_id + 1]
-            wedge1 = Wedge(shared_coord, 0.3, 0, 180, facecolor=colors(closest_clusters[0]), edgecolor='black')
-            wedge2 = Wedge(shared_coord, 0.3, 180, 360, facecolor=colors(closest_clusters[1]), edgecolor='black')
+
+            wedge1 = Wedge(shared_coord, wedge_radius, 0, 180,
+                           facecolor=colors(closest_clusters[0]),
+                           edgecolor='black', linewidth=1.0)
+            wedge2 = Wedge(shared_coord, wedge_radius, 180, 360,
+                           facecolor=colors(closest_clusters[1]),
+                           edgecolor='black', linewidth=1.0)
             ax.add_patch(wedge1)
             ax.add_patch(wedge2)
 
+    # Centroidi
     centroid_coords = [nodes[centroid + 1] for centroid in centroids]
     x_centroids, y_centroids = zip(*centroid_coords)
     plt.scatter(x_centroids, y_centroids, c='black', marker='*', s=200, label='Centroidi')
 
+    # Dettagli grafici
     plt.title(title, fontsize=16)
     plt.xlabel("Coordinata X", fontsize=14)
     plt.ylabel("Coordinata Y", fontsize=14)
     plt.grid(True)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper right')
+    plt.tight_layout()
     plt.savefig(snakecase(title) + '.png', format="png", dpi=300)
     # plt.show()
 
@@ -224,7 +254,6 @@ def save_comparison_table_as_image(metrics_slpa, metrics_overlap, metrics_resour
 
 
 ### --- METRICA DI COMPATTEZZA --- ###
-
 def evaluate_compactness_metrics(cluster_data, route_matrix, nodes, positive_scores=True):
     def mean_pairwise_distance(ids):
         if len(ids) <= 1: return 0.0
@@ -289,14 +318,15 @@ def evaluate_compactness_metrics(cluster_data, route_matrix, nodes, positive_sco
 
 def main():
     config = {
-        "rows": 150,
-        "cols": 150,
+        "rows": 50,
+        "cols": 50,
         "min_nodes_per_cluster": 100,
         "min_shared_nodes": 50,
         "min_exclusive_nodes": 20,
     }
 
-    nodes = generate_nodes(config["rows"], config["cols"])
+    #nodes = generate_nodes(config["rows"], config["cols"])
+    nodes = generate_random_nodes(config["rows"], config["cols"])
     route_matrix = create_distance_matrix(nodes)
     resource_list = generate_resource_list(nodes)
 
