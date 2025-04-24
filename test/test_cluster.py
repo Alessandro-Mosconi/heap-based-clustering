@@ -342,7 +342,7 @@ def main():
         "max_number_nodes": 120
     })
     json_resource = requests.post("http://localhost:4567/api/communities/3", json=input_request).json()
-    json.dump(json_resource, open('resource_result.json', "w"), indent=4)
+    json.dump(json_resource, open('50x50_random/resource_result.json', "w"), indent=4)
     plot_clusters_resource(json_resource['cluster_data'], json_resource['centroids'], nodes, resource_list, "Clustering bilanciato per risorse")
 
 
@@ -374,7 +374,7 @@ def main():
                 x, y = nodes[node_id]
                 member["labels"]["x"] = x
                 member["labels"]["y"] = y
-    json.dump(json_original, open('orignal_result.json', "w"), indent=4)
+    json.dump(json_original, open('50x50_random/orignal_result.json', "w"), indent=4)
     plot_communities(json_original["communities"], nodes, "Clustering SLPA")
 
     cluster_data_slpa = communities_to_cluster_data(json_original["communities"])
@@ -401,8 +401,8 @@ def main():
     plot_compactness_comparison(metrics_slpa, metrics_overlap, metrics_resource)
 
     save_comparison_table_as_image(metrics_slpa, metrics_overlap, metrics_resource,
-                               time_slpa, time_overlap, time_resource,
-                               filename="compactness_table.png")
+                                   time_slpa, time_overlap, time_resource,
+                                   filename="50x50_random/compactness_table.png")
 
 
 

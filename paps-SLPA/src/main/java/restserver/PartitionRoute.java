@@ -23,22 +23,29 @@ public class PartitionRoute {
 
             response.type("application/json");
 
+            long startTimeInitializationData = System.currentTimeMillis();
             PartitionData data = new Gson().fromJson(request.body(), PartitionData.class);
+
+            logger.info("PartitionData initializated after {} ms", System.currentTimeMillis() - startTimeInitializationData);
 
             SLPA slpa = new SLPA(data);
 
+            logger.info("SLPA initializated after {} ms", System.currentTimeMillis() - startTimeInitializationData);
+
             PartitionParameters parameters = data.getParameters();
 
-            long time = System.currentTimeMillis();
+            long elapsedTimeDataInitialization = System.currentTimeMillis() - startTimeInitializationData;
+
+            long startTimeAlgorithm = System.currentTimeMillis();
 
             logger.info("Starting SLPA");
             List<Community> communities = slpa.computeCommunities(parameters.getIterations(), parameters.getProbabilityThreshold());
 
             if (communities.size() > 1) communities = Utils.orderCommunities(communities);
 
-            Long elapsedTime = System.currentTimeMillis() - time;
+            long elapsedTime = System.currentTimeMillis() - startTimeAlgorithm;
             logger.info("Finished SLPA");
-            return new Gson().toJson(new PartitionResult(communities, elapsedTime), PartitionResult.class);
+            return new Gson().toJson(new PartitionResult(communities, elapsedTime, elapsedTimeDataInitialization), PartitionResult.class);
         });
 
 
@@ -48,43 +55,53 @@ public class PartitionRoute {
 
             response.type("application/json");
 
+            long startTimeInitializationData = System.currentTimeMillis();
             PartitionDataOverlappingCluster data = new Gson().fromJson(request.body(), PartitionDataOverlappingCluster.class);
 
-            logger.info("Data received");
+            logger.info("PartitionData initializated after {} ms", System.currentTimeMillis() - startTimeInitializationData);
+
             PartitionParametersOverlappingCluster parameters = data.getParameters();
 
-            long start = System.currentTimeMillis();
+            long elapsedTimeDataInitialization = System.currentTimeMillis() - startTimeInitializationData;
+
+            long startTimeAlgorithm = System.currentTimeMillis();
 
             logger.info("Starting overlapping clustering");
             HeapClustering.BalancedClusteringResult result = HeapClustering.balancedClustering(
-                    convertFloatToDouble(data.getMatrix().getRoutes()),
+                    data.getMatrix().getRoutes(),
                     parameters.getMinNodesPerCluster(),
                     parameters.getMinSharedNodes(),
                     parameters.getMinExclusiveNodes()
             );
 
             logger.info("Starting overlapping clustering");
-            long elapsed = System.currentTimeMillis() - start;
+            long elapsed = System.currentTimeMillis() - startTimeAlgorithm;
 
             String json = ClusterJsonExporter.generateClusterDataJson(
                     result.clusters,
                     result.centroids,
-                    elapsed
+                    elapsed,
+                    elapsedTimeDataInitialization
             );
 
 
             return json;
         });
+
+
         post("/communities/3", (request, response) -> {
 
             logger.info("new POST request to /communities/3");
 
             response.type("application/json");
+            long startTimeInitializationData = System.currentTimeMillis();
 
             PartitionDataResourceAware data = new Gson().fromJson(request.body(), PartitionDataResourceAware.class);
-            double[][] routeMatrix = convertFloatToDouble(data.getMatrix().getRoutes());
+            double[][] routeMatrix = data.getMatrix().getRoutes();
             double[] resourceList = data.getResources().stream().mapToDouble(Double::doubleValue).toArray();
             int maxNodesPerCluster = data.getMaxNodesPerCluster();
+
+            long elapsedTimeDataInitialization = System.currentTimeMillis() - startTimeInitializationData;
 
             long start = System.currentTimeMillis();
 
@@ -108,7 +125,8 @@ public class PartitionRoute {
             PartitionResultClusterOnly responseObj = new PartitionResultClusterOnly(
                     clusterData,
                     result.centroids,
-                    elapsed
+                    elapsed,
+                    elapsedTimeDataInitialization
             );
 
             return new Gson().toJson(responseObj);

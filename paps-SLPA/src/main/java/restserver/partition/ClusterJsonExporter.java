@@ -10,7 +10,8 @@ public class ClusterJsonExporter {
     public static String generateClusterDataJson(
             List<HeapClustering.ClusteringResult> results,
             List<Integer> centroids,
-            long computation_time
+            long computation_time,
+            long data_initialization_time
     ) {
         List<SimpleClusterData> simplified = new ArrayList<>();
 
@@ -18,7 +19,7 @@ public class ClusterJsonExporter {
             simplified.add(new SimpleClusterData(result.cluster, result.exclusiveNodes, result.sharedNodes));
         }
 
-        PartitionResultOverlappingCluster output = new PartitionResultOverlappingCluster(simplified, centroids, computation_time);
+        PartitionResultOverlappingCluster output = new PartitionResultOverlappingCluster(simplified, centroids, computation_time, data_initialization_time);
         return new Gson().toJson(output);
     }
 }

@@ -157,6 +157,8 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 
+.idea/
+
 # Cython debug symbols
 cython_debug/
 
@@ -172,3 +174,5 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+/test/TAXI_DATASET/taxi_log_2008_by_id/
+/test/TAXI_DATASET/taxi_log_2008_by_id/*
