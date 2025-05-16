@@ -419,7 +419,7 @@ def main():
         "resources": resource_list,
         "max_number_nodes": 120
     })
-    json_resource = requests.post("http://localhost:4567/api/communities/3", json=input_request).json()
+    json_resource = requests.post("http://localhost:4567/api/communities/resource", json=input_request).json()
     json.dump(json_resource, open('50x50_random/resource_result.json', "w"), indent=4)
     plot_clusters_resource(json_resource['cluster_data'], json_resource['centroids'], nodes, resource_list, "Clustering bilanciato per risorse")
 
@@ -431,7 +431,7 @@ def main():
         "min_shared_nodes": config["min_shared_nodes"],
         "min_exclusive_nodes": config["min_exclusive_nodes"]
     }
-    json_overlap = requests.post("http://localhost:4567/api/communities/2", json=input_request).json()
+    json_overlap = requests.post("http://localhost:4567/api/communities/overlap", json=input_request).json()
     json.dump(json_overlap, open('50x50_random/roverlapped_result.json', "w"), indent=4)
     plot_clusters_overlap(json_overlap['cluster_data'], json_overlap['centroids'], nodes, route_matrix, "Clustering con centroidi e nodi condivisi")
 

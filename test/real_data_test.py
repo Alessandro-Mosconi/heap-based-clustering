@@ -580,7 +580,7 @@ def main():
         "resources": resource_exp_list,
         "max_number_nodes": 780
     })
-    json_resource = requests.post("http://localhost:4567/api/communities/3", json=input_request).json()
+    json_resource = requests.post("http://localhost:4567/api/communities/resource", json=input_request).json()
     print("Saving resource exp result")
     json.dump(json_resource, open('resource_result_exp.json', "w"), indent=4)
     print("Resource exp saved")
@@ -592,7 +592,7 @@ def main():
         "resources": resource_log_list,
         "max_number_nodes": 780
     })
-    json_resource = requests.post("http://localhost:4567/api/communities/3", json=input_request).json()
+    json_resource = requests.post("http://localhost:4567/api/communities/resource", json=input_request).json()
     print("Saving resource log result")
     json.dump(json_resource, open('resource_result_log.json', "w"), indent=4)
     print("Resource log saved")
@@ -606,7 +606,7 @@ def main():
         "min_shared_nodes": 200,
         "min_exclusive_nodes": 200
     }
-    json_overlap = requests.post("http://localhost:4567/api/communities/2", json=input_request).json()
+    json_overlap = requests.post("http://localhost:4567/api/communities/overlap", json=input_request).json()
     print("Saving overlap result")
     json.dump(json_overlap, open('overlapped_result.json', "w"), indent=4)
     print("Overlap saved")

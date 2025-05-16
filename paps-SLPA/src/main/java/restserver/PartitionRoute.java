@@ -4,9 +4,16 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import restserver.ordering.Utils;
+import restserver.overlap.OverlappingClustering;
 import restserver.partition.*;
 import restserver.partitiondata.*;
-import restserver.partitiondata.SimpleClusterOnly;
+import restserver.resource.utils.SimpleClusterOnly;
+import restserver.overlap.utils.ClusterJsonExporter;
+import restserver.overlap.utils.PartitionDataOverlappingCluster;
+import restserver.overlap.utils.PartitionParametersOverlappingCluster;
+import restserver.resource.utils.PartitionDataResourceAware;
+import restserver.resource.utils.PartitionResultClusterOnly;
+import restserver.resource.ResourceAwareClustering;
 
 import java.util.*;
 
@@ -49,7 +56,7 @@ public class PartitionRoute {
         });
 
 
-        post("/communities/2", (request, response) -> {
+        post("/communities/overlap", (request, response) -> {
 
             logger.info("new POST request to partitions");
 
@@ -67,7 +74,7 @@ public class PartitionRoute {
             long startTimeAlgorithm = System.currentTimeMillis();
 
             logger.info("Starting overlapping clustering");
-            HeapClustering.BalancedClusteringResult result = HeapClustering.balancedClustering(
+            OverlappingClustering.BalancedClusteringResult result = OverlappingClustering.balancedClustering(
                     data.getMatrix().getRoutes(),
                     parameters.getMinNodesPerCluster(),
                     parameters.getMinSharedNodes(),
@@ -89,7 +96,7 @@ public class PartitionRoute {
         });
 
 
-        post("/communities/3", (request, response) -> {
+        post("/communities/resource", (request, response) -> {
 
             logger.info("new POST request to /communities/3");
 
