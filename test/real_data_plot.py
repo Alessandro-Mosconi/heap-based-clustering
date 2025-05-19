@@ -1,11 +1,13 @@
 import json
 import os
+import re
 
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from matplotlib.patches import Wedge
+from matplotlib.patches import Wedge, Patch
 from scipy.spatial.distance import cdist
 
 out_dir_unclustered = "real_data_unclustered"
@@ -107,13 +109,21 @@ def plot_nodes_with_resource_size(
     )
 
     plt.title(title)
-    plt.xlabel("Longitudine")
-    plt.ylabel("Latitudine")
+    plt.xlabel("Longitude")
+    plt.ylabel("Latitude")
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(out_dir_resource + "/" + f"{title}.svg", format="svg")
+    plt.savefig(out_dir_unclustered + "/" + f"{to_snake_case(title)}.svg", format="svg")
     print(f"✅ Plot salvato in {title}.svg")
     plt.show()
+
+def to_snake_case(text):
+    # Sostituisce spazi e trattini con underscore
+    text = re.sub(r'[\s\-]+', '_', text)
+    # Inserisce underscore prima delle maiuscole (eccetto inizio parola)
+    text = re.sub(r'(?<!^)(?=[A-Z])', '_', text)
+    return text.lower()
+
 
 '''
 def plot_clusters_overlap_2(
@@ -221,10 +231,10 @@ def plot_clusters_overlap(
         nodes,
         centroids=None,
         cluster_data=None,
-        title="plot_clusters_overlap",
+        title="Cluster with overlapping boundaries",
         figsize=(12, 10),
         alpha=0.7,
-        point_size=1.8,
+        point_size=1.85,
         wedge_scale=0.0008
 ):
     """
@@ -234,6 +244,8 @@ def plot_clusters_overlap(
 
     Modified to stretch vertically and remove white space.
     """
+    import matplotlib.pyplot as plt
+
     fig, ax = plt.subplots(figsize=figsize, constrained_layout=True)
     cmap = plt.colormaps["tab20"]
     colors = [cmap(i % 20) for i in range(20)]
@@ -245,6 +257,7 @@ def plot_clusters_overlap(
 
     clustered_coords = {}
     plotted_nodes = set()
+    legend_handles = []
 
     if cluster_data:
         for cluster_idx, data in enumerate(cluster_data):
@@ -265,8 +278,10 @@ def plot_clusters_overlap(
                 color=colors[cluster_idx % 20],
                 s=point_size,
                 alpha=alpha,
-                edgecolors='none',
-                label=f"Cluster {cluster_idx + 1}"
+                edgecolors='none'
+            )
+            legend_handles.append(
+                Patch(color=colors[cluster_idx % 20], label=f"Cluster {cluster_idx + 1}")
             )
 
     shared_node_to_clusters = {}
@@ -296,39 +311,37 @@ def plot_clusters_overlap(
             color="gray",
             s=point_size,
             alpha=alpha,
-            edgecolors='none',
-            label="Non assegnati"
+            edgecolors='none'
         )
+        legend_handles.append(Patch(color="gray", label="Non assegnati"))
 
     if centroids:
         centroid_coords = [nodes[c] for c in centroids if c in nodes]
         lat_c, lon_c = zip(*centroid_coords)
         ax.scatter(lon_c, lat_c, c='black', marker='*', s=10)
 
-    # Calcola i limiti dei dati
+    # Calcola limiti con padding minimo
     all_lons = [lon for (lat, lon) in nodes.values()]
     all_lats = [lat for (lat, lon) in nodes.values()]
+    ax.set_xlim(min(all_lons), max(all_lons))
+    ax.set_ylim(min(all_lats), max(all_lats))
+    ax.set_aspect('auto')  # Stretch verticale per usare tutto lo spazio
 
-    lon_min, lon_max = min(all_lons), max(all_lons)
-    lat_min, lat_max = min(all_lats), max(all_lats)
-
-    # Imposta i limiti dell'asse x (longitudine)
-    ax.set_xlim(lon_min, lon_max)
-
-    # Imposta i limiti dell'asse y (latitudine) per occupare tutto lo spazio
-    ax.set_ylim(lat_min, lat_max)
-
-    # Disabilita 'equal aspect' per evitare spazio bianco
-    ax.set_aspect('auto')  # Oppure commenta questa linea
-
-    ax.set_title("Distribuzione dei nodi con cluster", fontsize=14)
-    ax.set_xlabel("Longitudine")
-    ax.set_ylabel("Latitudine")
+    ax.set_title(title, fontsize=14)
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
     ax.grid(True)
 
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), markerscale=3)
+    # Legenda esterna a destra
+    ax.legend(
+        handles=legend_handles,
+        bbox_to_anchor=(1.05, 1),
+        loc='upper left',
+        borderaxespad=0.0,
+        frameon=False
+    )
 
-    plt.savefig(out_dir_overlap + "/" + f"{title}.svg", format="svg", bbox_inches='tight')
+    plt.savefig(out_dir_overlap + "/" + f"{to_snake_case(title)}.svg", format="svg", bbox_inches='tight')
     print(f"✅ Plot salvato in {title}.svg")
     plt.show()
 
@@ -405,6 +418,8 @@ def plot_clusters_html(nodes, cluster_data, centroids=None, filename="plot_clust
     fig.write_html(filename)
     print(f"✅ Plot HTML salvato in: {filename}")
 
+from matplotlib.patches import Patch
+
 def plot_communities(
     nodes,
     communities_json,
@@ -418,18 +433,11 @@ def plot_communities(
     title="SLPA community division",
     pad_pct=0.02
 ):
-    """
-    Plotta le comunità con colori distinti, riempiendo verticalmente
-    tutto lo spazio del quadrato (senza mantenere 1:1 X/Y).
 
-    Parametri aggiunti:
-    - pad_pct: percentuale di padding sui limiti (default 2%)
-    """
     fig, ax = plt.subplots(figsize=figsize)
-
     ax.set_title(title, fontsize=14)
-    ax.set_xlabel("Longitudine")
-    ax.set_ylabel("Latitudine")
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
     ax.grid(True)
 
     cmap = plt.get_cmap(cmap_name)
@@ -437,6 +445,7 @@ def plot_communities(
     colors = [cmap(i % cmap.N) for i in range(len(comms))]
 
     all_lats, all_lons = [], []
+    legend_handles = []
 
     for idx, community in enumerate(comms):
         member_ids = []
@@ -462,33 +471,149 @@ def plot_communities(
             color=colors[idx],
             alpha=alpha,
             edgecolors=edge_color,
-            linewidths=edge_width,
-            label=community.get("name", f"Comm {idx+1}")
+            linewidths=edge_width
         )
+
+        name = community.get("name", f"Community {idx + 1}")
+        legend_handles.append(Patch(color=colors[idx], label=name))
 
     if all_lats and all_lons:
         lon_min, lon_max = min(all_lons), max(all_lons)
         lat_min, lat_max = min(all_lats), max(all_lats)
-        # piccolo padding
         lon_pad = (lon_max - lon_min) * pad_pct
         lat_pad = (lat_max - lat_min) * pad_pct
         ax.set_xlim(lon_min - lon_pad, lon_max + lon_pad)
         ax.set_ylim(lat_min - lat_pad, lat_max + lat_pad)
 
+    # Legenda esterna uniforme con gli altri plot
     ax.legend(
+        handles=legend_handles,
         bbox_to_anchor=(1.05, 1),
         loc='upper left',
-        markerscale=2,
+        borderaxespad=0.0,
         frameon=False
     )
+
     plt.tight_layout()
 
     if save_svg:
         filename = f"{title.replace(' ', '_')}.svg"
-        plt.savefig(out_dir_original + "/" + filename, format="svg")
+        plt.savefig(out_dir_original + "/" + filename, format="svg", bbox_inches='tight')
         print(f"✅ Plot salvato in {filename}")
 
     plt.show()
+
+
+def plot_clusters_with_size_and_centroids(
+    nodes,
+    scores,
+    cluster_json,
+    title="resource_exp_plot",
+    figsize=(15, 12),
+    min_size=5.0,
+    max_size=80.0,
+    alpha=0.6,
+    edge_color="black",
+    edge_width=0.4,
+    centroid_marker="*",
+    centroid_size=200,
+    centroid_color="black",
+    cmap_name="tab20c",
+    pad_pct=0.02,
+    save_svg=True
+):
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.set_title(title, fontsize=14)
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
+    ax.grid(True)
+
+    node_ids = np.array(list(nodes.keys()))
+    scores = np.array(scores)
+
+    # Normalizzazione score → dimensioni
+    vmin, vmax = np.percentile(scores, 1), np.percentile(scores, 99)
+    norm = (scores - vmin) / (vmax - vmin)
+    sizes_map = min_size + norm * (max_size - min_size)
+    node_id_to_size = dict(zip(node_ids, sizes_map))
+
+    coords = {nid: nodes[nid] for nid in node_ids}
+    clusters = cluster_json["cluster_data"]
+    centroids = set(cluster_json.get("centroids", []))
+
+    cmap = plt.get_cmap(cmap_name)
+    colors = [cmap(i % cmap.N) for i in range(len(clusters))]
+    legend_handles = []
+
+    all_lats, all_lons = [], []
+
+    for idx, cluster_entry in enumerate(clusters):
+        cluster_nodes = [nid for nid in cluster_entry["cluster"] if nid in coords]
+        if not cluster_nodes:
+            continue
+
+        cluster_coords = np.array([coords[nid] for nid in cluster_nodes])
+        lats, lons = cluster_coords[:, 0], cluster_coords[:, 1]
+        all_lats.extend(lats)
+        all_lons.extend(lons)
+
+        sizes = np.array([node_id_to_size[nid] for nid in cluster_nodes])
+        color = colors[idx]
+
+        ax.scatter(
+            lons, lats,
+            s=sizes,
+            color=color,
+            alpha=alpha,
+            edgecolors=edge_color,
+            linewidths=edge_width
+        )
+
+        # Aggiungi entry per legenda
+        legend_handles.append(mpatches.Patch(color=color, label=f"Cluster {idx + 1}"))
+
+    # Disegna i centroidi
+    for cid in centroids:
+        if cid in coords:
+            lat, lon = coords[cid]
+            ax.scatter(
+                lon, lat,
+                s=centroid_size,
+                color=centroid_color,
+                marker=centroid_marker,
+                edgecolors="white",
+                linewidths=1.0,
+                zorder=5
+            )
+
+    # Padding automatico
+    if all_lats and all_lons:
+        lon_min, lon_max = min(all_lons), max(all_lons)
+        lat_min, lat_max = min(all_lats), max(all_lats)
+        lon_pad = (lon_max - lon_min) * pad_pct
+        lat_pad = (lat_max - lat_min) * pad_pct
+        ax.set_xlim(lon_min - lon_pad, lon_max + lon_pad)
+        ax.set_ylim(lat_min - lat_pad, lat_max + lat_pad)
+
+    # Legenda esterna a destra
+    ax.legend(
+        handles=legend_handles,
+        bbox_to_anchor=(1.05, 1),
+        loc='upper left',
+        borderaxespad=0.0,
+        frameon=False
+    )
+
+    plt.tight_layout()
+
+    if save_svg:
+        filename = f"{to_snake_case(title)}.svg"
+        plt.savefig(out_dir_resource + "/" + filename, format="svg", bbox_inches="tight")
+        print(f"✅ Plot salvato in {filename}")
+
+    plt.show()
+
 
 
 ### --- MAIN --- ###
@@ -544,30 +669,47 @@ def main():
 
 
     print("Plot nodes")
-    plot_nodes(nodes)
+    #plot_nodes(nodes)
+
+    print("Plot nodes Resource exp")
+    '''plot_nodes_with_resource_size(
+        nodes=nodes,
+        scores=resource_exp_list,
+        title="Node distribution with exponential resource distribution",
+    )'''
+
+    print("Plot nodes Resource log")
+    '''plot_nodes_with_resource_size(
+        nodes=nodes,
+        scores=resource_log_list,
+        title="Node distribution with log-norm resource distribution"
+    )'''
 
     print("Plot SLPA")
     plot_communities(nodes, json_original)
 
     print("Plot Overlap")
-    plot_clusters_overlap(nodes, json_overlap['centroids'], json_overlap['cluster_data'], )
+    #plot_clusters_overlap(nodes, json_overlap['centroids'], json_overlap['cluster_data'], )
 
     #print("Plot Overlap html")
     #plot_clusters_html(nodes, json_overlap["cluster_data"], json_overlap["centroids"])
 
+
     print("Plot Resource exp")
-    plot_nodes_with_resource_size(
+    '''plot_clusters_with_size_and_centroids(
         nodes=nodes,
         scores=resource_exp_list,
-        title="nodes_exp_plot"
-    )
+        cluster_json=json_resource_exp,
+        title="Resource aware with exponential resource distribution"
+    )'''
 
     print("Plot Resource log")
-    plot_nodes_with_resource_size(
+    '''plot_clusters_with_size_and_centroids(
         nodes=nodes,
         scores=resource_log_list,
-        title="nodes_log_plot"
-    )
+        cluster_json=json_resource_log,
+        title="Resource aware with log-norm resource distribution"
+    )'''
 
 
 if __name__ == "__main__":
