@@ -1,28 +1,36 @@
 # heap-based-clustering
 
-Repository sperimentale per algoritmi di clustering applicati a grafi e reti. Il progetto include:
+Collection of clustering algorithms applied to graphs and networks. The repository provides two ways to run them:
 
-- **Server REST Java** (cartella `paps-SLPA`) con endpoint per eseguire gli algoritmi via HTTP
-- **Script Python** (cartella `python_clustering`) per studiare e visualizzare i diversi tipi di clustering
-- Dati di esempio e test (cartella `test`)
+- **Java REST server** (`paps-SLPA`) to run the algorithms via HTTP
+- **Python scripts** (`python_clustering`) for quick tests and visualisations
+- **Sample datasets** and validation scripts (`test`)
 
-## Struttura
+## Structure
+
+| Directory | Contents |
+|-----------|----------|
+| `paps-SLPA/` | Java REST server based on Spark |
+| `python_clustering/` | Python scripts to experiment with the algorithms |
+| `test/` | Example datasets and validation scripts |
 
 ```
 heap-based-clustering/
-├── paps-SLPA/               # implementazione server in Java
-├── python_clustering/       # script ed esperimenti in Python
-└── test/                    # dataset di prova e script di validazione
+├── paps-SLPA/
+├── python_clustering/
+└── test/
 ```
 
-### 1. Modulo Java `paps-SLPA`
-Il progetto è gestito con Maven (vedi `pom.xml`) e fornisce un piccolo server REST basato su Spark. Il server espone tre endpoint principali:
+### 1. Java module `paps-SLPA`
+The project uses Maven (see `pom.xml`) and provides a small REST server built on Spark. The main endpoints are summarised below:
 
-- `POST /communities` – clustering SLPA tradizionale
-- `POST /communities/overlap` – clustering con nodi condivisi
-- `POST /communities/resource` – clustering bilanciato in base alle risorse e al numero massimo di nodi per cluster
+| Endpoint | Method | Description |
+|----------|-------|-------------|
+| `/communities` | `POST` | traditional SLPA clustering |
+| `/communities/overlap` | `POST` | clustering with shared nodes |
+| `/communities/resource` | `POST` | resource-aware balanced clustering |
 
-Per avviare il server:
+To start the Java server:
 
 ```bash
 cd paps-SLPA
@@ -30,26 +38,32 @@ mvn package
 java -jar target/paps-SLPA-rest-jar-with-dependencies.jar
 ```
 
-Una volta avviato, il server risponderà sotto `/api`. Gli endpoint `/communities/overlap` e `/communities/resource` sono quelli più sperimentali:
+The service exposes the endpoints on the default port `4567` with the prefix `/api`. The endpoints `/communities/overlap` and `/communities/resource` are the most experimental:
 
-- **/communities/overlap**: applica l’algoritmo `OverlappingClustering` e restituisce i cluster con indicazione di nodi esclusivi e condivisi.
-- **/communities/resource**: usa `ResourceAwareClustering` per bilanciare il numero di nodi e le risorse assegnate a ciascun cluster.
+- **/communities/overlap**: runs the `OverlappingClustering` algorithm and returns the clusters highlighting exclusive and shared nodes.
+- **/communities/resource**: uses `ResourceAwareClustering` to balance the number of nodes and the resources assigned to each cluster.
 
-Il formato di input può essere preso come riferimento da `paps-SLPA/src/main/java/restserver/example.json`.
+Use the file `paps-SLPA/src/main/java/restserver/example.json` as a reference for the input format.
 
-### 2. Script Python
-La cartella `python_clustering` contiene implementazioni didattiche degli stessi algoritmi, utili per test veloci senza dover avviare il server Java.
+### 2. Python scripts
+The `python_clustering` folder contains educational implementations of the same algorithms, useful for quick tests without starting the Java server.
 
-- `overlapping_clustering/` – versioni lineari e random del clustering con nodi condivisi, con script per la generazione di grafici e resoconti JSON.
-- `resource_clustering/` – algoritmi orientati al bilanciamento delle risorse, con output grafici e statistiche.
+| Folder | Description |
+|--------|-------------|
+| `overlapping_clustering/` | linear and random versions of clustering with shared nodes |
+| `resource_clustering/` | algorithms focused on resource balancing |
 
-Gli script salvano i risultati sotto forma di file JSON e immagini PNG. Consultare i singoli file per i parametri e per le istruzioni di esecuzione.
+The scripts save the results as JSON files and PNG images. See the individual files for parameters and execution instructions.
 
-### 3. Dati di test
-La cartella `test` offre dataset sintetici e reali (ad esempio `TAXI_DATASET`) insieme a script di validazione e confronto delle metriche (`real_data_metrics.py`, `real_data_plot.py`).
+### 3. Test data
+The `test` folder holds synthetic and real datasets together with validation scripts.
 
-## Suggerimenti per iniziare
-1. Esaminare `example.json` per capire il formato base delle richieste.
-2. Provare i notebook o gli script Python per familiarizzare con i parametri degli algoritmi.
-3. Compilare il server Java e inviare richieste agli endpoint `/communities/overlap` e `/communities/resource` per testare i risultati su larga scala.
+| Directory | Description |
+|-----------|-------------|
+| `25x25`, `40x40`, `50x50_random` | small synthetic examples |
+| `TAXI_DATASET` and `real_data_*` | real data and analysis scripts |
 
+## Getting started
+1. Inspect `example.json` to understand the basic request format.
+2. Try the notebooks or Python scripts to familiarise yourself with the algorithm parameters.
+3. Build the Java server and send requests to `/communities/overlap` and `/communities/resource` to test the results on a larger scale.
