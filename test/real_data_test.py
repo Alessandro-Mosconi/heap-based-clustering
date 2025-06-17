@@ -602,7 +602,7 @@ def main():
     # --- Clustering con overlap ---
     print("Sending overlap")
     input_request["parameters"] = {
-        "min_nodes_per_cluster": 750,
+        "max_nodes_per_cluster": 750,
         "min_shared_nodes": 200,
         "min_exclusive_nodes": 200
     }

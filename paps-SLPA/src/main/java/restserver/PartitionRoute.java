@@ -76,12 +76,12 @@ public class PartitionRoute {
             logger.info("Starting overlapping clustering");
             OverlappingClustering.BalancedClusteringResult result = OverlappingClustering.balancedClustering(
                     data.getMatrix().getRoutes(),
-                    parameters.getMinNodesPerCluster(),
+                    parameters.getMaxNodesPerCluster(),
                     parameters.getMinSharedNodes(),
                     parameters.getMinExclusiveNodes()
             );
 
-            logger.info("Starting overlapping clustering");
+            logger.info("Finished overlapping clustering");
             long elapsed = System.currentTimeMillis() - startTimeAlgorithm;
 
             String json = ClusterJsonExporter.generateClusterDataJson(

@@ -428,7 +428,7 @@ def plot_communities(
     point_size=4,
     cmap_name="tab20c",
     edge_color="black",
-    edge_width=0.05,
+    edge_width=0.00,
     save_svg=True,
     title="SLPA community division",
     pad_pct=0.02

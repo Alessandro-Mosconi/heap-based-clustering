@@ -27,13 +27,13 @@ public class OverlappingClustering {
 
     public static BalancedClusteringResult balancedClustering(
             double[][] routeMatrix,
-            int minNodesPerCluster,
+            int maxNodesPerCluster,
             int minSharedNodes,
             int minExclusiveNodes
     ) {
         int n = routeMatrix.length;
-        int numClusters = n / minNodesPerCluster;
-        int clusterSize = n / numClusters;
+        int numClusters = (int) Math.ceil((double) n / maxNodesPerCluster);
+        int clusterSize = maxNodesPerCluster;
 
         if (minSharedNodes + minExclusiveNodes >= clusterSize) {
             throw new IllegalArgumentException("minSharedNodes + minExclusiveNodes must be less than cluster size.");

@@ -392,7 +392,7 @@ def main():
     config = {
         "rows": 50,
         "cols": 50,
-        "min_nodes_per_cluster": 100,
+        "max_nodes_per_cluster": 100,
         "min_shared_nodes": 50,
         "min_exclusive_nodes": 20,
     }
@@ -414,30 +414,30 @@ def main():
     }
 
     # --- Clustering bilanciato per risorse ---
-    print("mando resource")
+    print("sending resource")
     input_request.update({
         "resources": resource_list,
         "max_number_nodes": 120
     })
     json_resource = requests.post("http://localhost:4567/api/communities/resource", json=input_request).json()
     json.dump(json_resource, open('50x50_random/resource_result.json', "w"), indent=4)
-    plot_clusters_resource(json_resource['cluster_data'], json_resource['centroids'], nodes, resource_list, "Clustering bilanciato per risorse")
+    plot_clusters_resource(json_resource['cluster_data'], json_resource['centroids'], nodes, resource_list, "Resource-aware clustering")
 
 
     # --- Clustering con overlap ---
-    print("mando overlap")
+    print("sending overlap")
     input_request["parameters"] = {
-        "min_nodes_per_cluster": config["min_nodes_per_cluster"],
+        "max_nodes_per_cluster": config["max_nodes_per_cluster"],
         "min_shared_nodes": config["min_shared_nodes"],
         "min_exclusive_nodes": config["min_exclusive_nodes"]
     }
     json_overlap = requests.post("http://localhost:4567/api/communities/overlap", json=input_request).json()
-    json.dump(json_overlap, open('50x50_random/roverlapped_result.json', "w"), indent=4)
-    plot_clusters_overlap(json_overlap['cluster_data'], json_overlap['centroids'], nodes, route_matrix, "Clustering con centroidi e nodi condivisi")
+    json.dump(json_overlap, open('50x50_random/overlapped_result.json', "w"), indent=4)
+    plot_clusters_overlap(json_overlap['cluster_data'], json_overlap['centroids'], nodes, route_matrix, "Overlapping clustering")
 
 
     # --- Clustering standard ---
-    print("mando originale")
+    print("sending original")
     input_request["parameters"] = {
         "community-size": 100,
         "maximum-delay": 20,
